@@ -124,6 +124,44 @@ def is_degen(vcf_line, target_degen):
             return False
 
 
+def is_mute_type(vcf_line, mute_list, pol):
+
+    """
+    takes pysam variant and determins if variant is of type listed in mutation list
+    :param vcf_line: pysam variant
+    :param mute_list: list
+    :param pol: bool
+    :return:
+    """
+    # strong = CG weak = AT
+    base_types = {'A': 'W', 'T': 'W', 'C': 'S', 'G': 'S'}
+    if mute_list is None:
+        return True
+    else:
+        ref_base = base_types[vcf_line.ref]
+        alt_base = base_types[vcf_line.alts[0]]
+        if ref_base == alt_base == 'W':
+            mutation_type = 'WW'
+        elif ref_base == alt_base == 'S':
+            mutation_type = 'SS'
+        else:
+            if pol is False:
+                return False
+            else:
+                try:
+                    anc_base = base_types[vcf_line.info['AA']]
+                    if anc_base == ref_base:
+                        mutation_type = anc_base + alt_base
+                    else:
+                        mutation_type = alt_base + ref_base
+                except KeyError:
+                    return False
+        if mutation_type in mute_list:
+            return True
+        else:
+            return False
+
+
 # main call
 def main():
 
@@ -135,6 +173,8 @@ def main():
     parser.add_argument('-mode', help='Variant mode to run in', choices=['snp', 'ins', 'del', 'indel'], required=True)
     parser.add_argument('-degen', help='Degeneracy of coding SNPs to extract (must run with -mode snp',
                         choices=[0, 2, 3, 4], type=int)
+    parser.add_argument('-mute_type', help='Mutation type, use only with mode -snp',
+                        choices=['WW', 'SS', 'SW', 'WS'], action='append')
     parser.add_argument('-folded', help='If specified will output minor allele spectrum',
                         default=False, action='store_true')
     args = parser.parse_args()
@@ -146,12 +186,15 @@ def main():
     fold = args.folded
     mode = args.mode
     degen = args.degen
+    mute_type = args.mute_type
     if mode == 'indel' and fold is False:
         sys.exit('-mode indel must be run in conjunction with -folded')
     if mode == 'ins' and fold is True or mode == 'del' and fold is True:
         sys.exit('-mode ins and -mode del cannot be run in conjunction with -folded')
     if degen is not None and mode != 'snp':
         sys.exit('-degen can only be specified in conjunction with -mode snp')
+    if mute_type is not None and mode != 'snp':
+        sys.exit('-mute_type can only be run with -mode snp')
 
     # loop through vcf
     if chromo == 'ALL':
@@ -172,8 +215,11 @@ def main():
         # gets degeneracy if required
         degen_ok = is_degen(variant, degen)
 
+        # gets mutation type if required
+        mutetype_ok = is_mute_type(variant, mute_type, not fold)
+
         # outputs if all criteria ok
-        if falls_in_regions is True and degen_ok is True:
+        if falls_in_regions is True and degen_ok is True and mutetype_ok is True:
             print frequency
 
 
