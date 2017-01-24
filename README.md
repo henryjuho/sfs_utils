@@ -75,6 +75,24 @@ Which yields:
 0.45
 ```
 
+#### Sorted, counted SFS for quick plotting
+
+```
+./vcf2raw_sfs.py -vcf data/test_data_sfs.vcf.gz -mode indel -folded | sort | uniq -c
+```
+
+Which yields:
+
+```
+      2 0.05
+      2 0.1
+      1 0.2
+      2 0.25
+      1 0.3
+      1 0.35
+      1 0.45
+```
+
 ### Examples - calling within python
 
 todo
