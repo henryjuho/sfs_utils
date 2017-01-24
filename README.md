@@ -30,6 +30,8 @@ optional arguments:
                         Variant mode to run in
   -degen {0,2,3,4}      Degeneracy of coding SNPs to extract (must run with
                         -mode snp
+  -mute_type {WW,SS,SW,WS}
+                        Mutation type, use only with mode -snp
   -folded               If specified will output minor allele spectrum
 ```
 
@@ -40,6 +42,7 @@ optional arguments:
  * ```-region``` used to specify a specific genomic region to extract the site frequencies from, eg) intron or intergenic, this relies on annotation information to be present in the VCF info field in the form of ```ANNO=region```
  * ```-mode``` is used to determine the variant type to extract, eith 'snp', 'indel', 'del', or 'ins'
  * ```-degen``` used to specify degeneracy of snps desired for site frequencies, relies on degeneracy information being present in the VCF info field in the form ```DEGEN=int``` eg) ```DEGEN=0``` for zerofold snps. Must be run in conjunction with ```-mode snp``` 
+ * ```-mute_type``` used to specify what mutation type is desired S<->S = SS, W<->W = WW, W->S = WS and S->W = SW. Can only be used with ```-mode snp``` and SW and WS will only output if ```-folded``` is not specified 
  * ```-folded``` if present will output the folded (minor allele) site frequencies (cannot be used in conjunction with -mode del or mode ins)
 
 ### Examples - commandline
@@ -106,6 +109,19 @@ Which returns:
 
 ```
 0.05
+0.1
+```
+
+#### folded SFS for S<->S SNPs
+
+```
+./vcf2raw_sfs.py -vcf data/test_data_sfs_snp.vcf.gz -mode snp -folded -mute_type SS
+```
+
+Output:
+
+```
+0.1
 0.1
 ```
 
