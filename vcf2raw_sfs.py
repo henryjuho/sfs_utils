@@ -102,6 +102,28 @@ def in_regions(vcf_line, target_regions):
             return False
 
 
+def is_degen(vcf_line, target_degen):
+
+    """
+    takes a pysam variant and desired degeneracy and returns true or false for that variant
+    :param vcf_line: pysam variant
+    :param target_degen: int
+    :return: bool
+    """
+
+    if target_degen is None:
+        return True
+    else:
+        try:
+            degeneracy = int(vcf_line.info['DEGEN'])
+            if target_degen == degeneracy:
+                return True
+            else:
+                return False
+        except KeyError:
+            return False
+
+
 # main call
 def main():
 
@@ -111,6 +133,8 @@ def main():
     parser.add_argument('-chr', help='Chromosome to extract', default='ALL')
     parser.add_argument('-region', help='Genomic regions to extract, default = ALL', action='append')
     parser.add_argument('-mode', help='Variant mode to run in', choices=['snp', 'ins', 'del', 'indel'], required=True)
+    parser.add_argument('-degen', help='Degeneracy of coding SNPs to extract (must run with -mode snp',
+                        choices=[0, 2, 3, 4], type=int)
     parser.add_argument('-folded', help='If specified will output minor allele spectrum',
                         default=False, action='store_true')
     args = parser.parse_args()
@@ -121,10 +145,13 @@ def main():
     regions = args.region
     fold = args.folded
     mode = args.mode
+    degen = args.degen
     if mode == 'indel' and fold is False:
         sys.exit('-mode indel must be run in conjunction with -folded')
     if mode == 'ins' and fold is True or mode == 'del' and fold is True:
         sys.exit('-mode ins and -mode del cannot be run in conjunction with -folded')
+    if degen is not None and mode != 'snp':
+        sys.exit('-degen can only be specified in conjunction with -mode snp')
 
     # loop through vcf
     if chromo == 'ALL':
@@ -142,8 +169,11 @@ def main():
         # gets variant region if regional sfs required
         falls_in_regions = in_regions(variant, regions)
 
+        # gets degeneracy if required
+        degen_ok = is_degen(variant, degen)
+
         # outputs if all criteria ok
-        if falls_in_regions is True:
+        if falls_in_regions is True and degen_ok is True:
             print frequency
 
 
