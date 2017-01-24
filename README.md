@@ -127,4 +127,12 @@ Output:
 
 ### Examples - calling within python
 
-todo
+An example of calling the script within python making use of the subproccess module, allowing the SFS to be read in and stored in a list.
+
+```python
+>>> import subprocess
+>>> del_sfs_cmd = './vcf2raw_sfs.py -vcf data/test_data_sfs.vcf.gz -region intergenic -mode del' 
+>>> del_sfs = subprocess.Popen(del_sfs_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].split('\n')[:-1]
+>>> del_sfs
+['0.3', '0.05', '0.1', '0.75', '0.2']
+```
