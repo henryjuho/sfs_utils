@@ -17,7 +17,7 @@ todo
 
 ### Examples - commandline
 
-Below are some examples for different extract site frequencies
+Below are some examples for different extracted site frequencies
 
 #### SFS for all deletions genome wide
 
