@@ -162,6 +162,27 @@ def is_mute_type(vcf_line, mute_list, pol):
             return False
 
 
+def allele_num_ok(vcf_line, no_samples, multi):
+
+    """
+    checks to see if variant is biallelic
+    :param vcf_line: pysam variant
+    :param no_samples: int
+    :param multi: bool
+    :return: bool
+    """
+
+    if multi is False:
+        pos_biallelic_freqs = [i/float(2*no_samples) for i in range(1, 2*no_samples)]
+        alt_allele_freq = round(vcf_line.info['AF'][0], 2)
+        if alt_allele_freq in pos_biallelic_freqs:
+            return True
+        else:
+            return False
+    else:
+        return True
+
+
 # main call
 def main():
 
@@ -177,6 +198,8 @@ def main():
                         choices=['WW', 'SS', 'SW', 'WS'], action='append')
     parser.add_argument('-folded', help='If specified will output minor allele spectrum',
                         default=False, action='store_true')
+    parser.add_argument('-multi_allelic', help='If specified will not restrict output to biallelic sites',
+                        default=False, action='store_true')
     args = parser.parse_args()
 
     # variables
@@ -187,6 +210,9 @@ def main():
     mode = args.mode
     degen = args.degen
     mute_type = args.mute_type
+    multi_allelic = args.multi_allelic
+
+    # check commandline options
     if mode == 'indel' and fold is False:
         sys.exit('-mode indel must be run in conjunction with -folded')
     if mode == 'ins' and fold is True or mode == 'del' and fold is True:
@@ -201,6 +227,8 @@ def main():
         vcf = vcf_file.fetch()
     else:
         vcf = vcf_file.fetch(chromo)
+
+    number_samples = len(vcf_file.header.samples)
 
     for variant in vcf:
 
@@ -218,8 +246,11 @@ def main():
         # gets mutation type if required
         mutetype_ok = is_mute_type(variant, mute_type, not fold)
 
+        # checks if is biallelic
+        alleles_ok = allele_num_ok(variant, number_samples, multi_allelic)
+
         # outputs if all criteria ok
-        if falls_in_regions is True and degen_ok is True and mutetype_ok is True:
+        if falls_in_regions is True and degen_ok is True and mutetype_ok is True and alleles_ok is True:
             print frequency
 
 
