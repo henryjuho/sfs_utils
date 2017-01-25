@@ -33,6 +33,8 @@ optional arguments:
   -mute_type {WW,SS,SW,WS}
                         Mutation type, use only with mode -snp
   -folded               If specified will output minor allele spectrum
+  -multi_allelic        If specified will not restrict output to biallelic
+                        sites
 ```
 
 #### Options
@@ -44,6 +46,7 @@ optional arguments:
  * ```-degen``` used to specify degeneracy of snps desired for site frequencies, relies on degeneracy information being present in the VCF info field in the form ```DEGEN=int``` eg) ```DEGEN=0``` for zerofold snps. Must be run in conjunction with ```-mode snp``` 
  * ```-mute_type``` used to specify what mutation type is desired S<->S = SS, W<->W = WW, W->S = WS and S->W = SW. Can only be used with ```-mode snp``` and SW and WS will only output if ```-folded``` is not specified 
  * ```-folded``` if present will output the folded (minor allele) site frequencies (cannot be used in conjunction with -mode del or mode ins)
+ * ```-multi_allelic``` if specified then will not restrict sites to biallelic (default)
 
 ### Examples - commandline
 
