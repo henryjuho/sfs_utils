@@ -183,6 +183,20 @@ def allele_num_ok(vcf_line, no_samples, multi):
         return True
 
 
+def is_auto(variant_line):
+
+    """
+    returns true if autosome
+    :param variant_line: pysam variant
+    :return: bool
+    """
+
+    if variant_line.contig != 'chrZ':
+        return True
+    else:
+        return False
+
+
 # main call
 def main():
 
@@ -198,6 +212,8 @@ def main():
                         choices=['WW', 'SS', 'SW', 'WS'], action='append')
     parser.add_argument('-folded', help='If specified will output minor allele spectrum',
                         default=False, action='store_true')
+    parser.add_argument('-auto_only', help='If specified will exclude sex chromosomes',
+                        default=False, action='store_true')
     parser.add_argument('-multi_allelic', help='If specified will not restrict output to biallelic sites',
                         default=False, action='store_true')
     args = parser.parse_args()
@@ -211,6 +227,7 @@ def main():
     degen = args.degen
     mute_type = args.mute_type
     multi_allelic = args.multi_allelic
+    auto_only = args.auto_only
 
     # check commandline options
     if mode == 'indel' and fold is False:
@@ -248,6 +265,11 @@ def main():
 
         # checks if is biallelic
         alleles_ok = allele_num_ok(variant, number_samples, multi_allelic)
+
+        # checks if auto
+        auto = is_auto(variant)
+        if auto_only is True and auto is False:
+            continue
 
         # outputs if all criteria ok
         if falls_in_regions is True and degen_ok is True and mutetype_ok is True and alleles_ok is True:
