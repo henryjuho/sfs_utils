@@ -190,8 +190,8 @@ def is_auto(variant_line):
     :param variant_line: pysam variant
     :return: bool
     """
-
-    if variant_line.contig != 'chrZ':
+    sex_chromos = {'chrZ', 'Z', 'chrW', 'W', 'X', 'XHet', 'Y'}
+    if variant_line.contig not in sex_chromos:
         return True
     else:
         return False
