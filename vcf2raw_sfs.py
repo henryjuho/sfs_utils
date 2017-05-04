@@ -18,7 +18,7 @@ def get_derived_freq(vcf_line, run_mode):
 
     ref_seq = vcf_line.ref
     alt_seq = vcf_line.alts[0]
-    alt_freq = round(vcf_line.info['AF'][0], 2)
+    alt_freq = round(vcf_line.info['AF'][0], 3)
     try:
         anc_seq = vcf_line.info['AA']
     except KeyError:  # ie. not polarised
@@ -57,7 +57,7 @@ def get_minor_freq(vcf_line):
     :return: float
     """
 
-    alt_allele_freq = round(vcf_line.info['AF'][0], 2)
+    alt_allele_freq = round(vcf_line.info['AF'][0], 3)
     if alt_allele_freq <= 0.5:
         return alt_allele_freq
     else:
@@ -173,8 +173,8 @@ def allele_num_ok(vcf_line, no_samples, multi):
     """
 
     if multi is False:
-        pos_biallelic_freqs = [i/float(2*no_samples) for i in range(1, 2*no_samples)]
-        alt_allele_freq = round(vcf_line.info['AF'][0], 2)
+        pos_biallelic_freqs = [round(i/float(2*no_samples), 3) for i in range(1, 2*no_samples)]
+        alt_allele_freq = round(vcf_line.info['AF'][0], 3)
         if alt_allele_freq in pos_biallelic_freqs:
             return True
         else:
