@@ -6,19 +6,20 @@ import sys
 
 
 # functions
-def get_derived_freq(vcf_line, run_mode):
+def get_derived_freq(vcf_line, run_mode, no_samples):
 
     """
     function takes a pysam vcf variant and a variant mode and returns the derived allele frequency for that variant,
     if it matches the given variant mode (eg ins, if insertion spectrum required)
     :param vcf_line: pysam variant
     :param run_mode: string
+    :param no_samples: int
     :return: None or float
     """
 
     ref_seq = vcf_line.ref
     alt_seq = vcf_line.alts[0]
-    alt_freq = round(vcf_line.info['AF'][0], 3)
+    alt_freq = round(vcf_line.info['AC'][0]/float(no_samples*2), 3)
     try:
         anc_seq = vcf_line.info['AA']
     except KeyError:  # ie. not polarised
@@ -49,35 +50,37 @@ def get_derived_freq(vcf_line, run_mode):
         return derv_freq
 
 
-def get_minor_freq(vcf_line):
+def get_minor_freq(vcf_line, no_samples):
 
     """
     takes a pysam variant and returns the minor allele frequency
     :param vcf_line: pysam variant
+    :param no_samples: int
     :return: float
     """
 
-    alt_allele_freq = round(vcf_line.info['AF'][0], 3)
+    alt_allele_freq = round(vcf_line.info['AC'][0]/float(no_samples*2), 3)
     if alt_allele_freq <= 0.5:
         return alt_allele_freq
     else:
         return 1 - alt_allele_freq
 
 
-def get_out_freq(vcf_line, pol, run_mode):
+def get_out_freq(vcf_line, pol, run_mode, no_samples):
 
     """
     takes pysam variant, polarisation argument and variant run type
     :param vcf_line: pysam variant
     :param pol: bool
     :param run_mode: str
+    :param no_samples: int
     :return: None or float
     """
 
     if pol is True:
-        return get_derived_freq(vcf_line, run_mode)
+        return get_derived_freq(vcf_line, run_mode, no_samples)
     else:
-        return get_minor_freq(vcf_line)
+        return get_minor_freq(vcf_line, no_samples)
 
 
 def in_regions(vcf_line, target_regions):
@@ -250,7 +253,7 @@ def main():
     for variant in vcf:
 
         # gets relevant freq, minor or derived, see functions
-        frequency = get_out_freq(variant, not fold, mode)
+        frequency = get_out_freq(variant, not fold, mode, number_samples)
         if frequency is None:  # skips when no freq returned, ie unpolarised or wrong var type
             continue
 
