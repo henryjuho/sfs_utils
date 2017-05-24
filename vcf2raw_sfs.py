@@ -205,7 +205,8 @@ def main():
 
     # arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-vcf', help='VCF file to extract sfs from', required=True)
+    parser.add_argument('-vcf', help='VCF file to extract sfs from, if not specified will read from standard in,'
+                                     'but must contain the header', default='stdin')
     parser.add_argument('-chr', help='Chromosome to extract', default='ALL')
     parser.add_argument('-region', help='Genomic regions to extract, default = ALL', action='append')
     parser.add_argument('-mode', help='Variant mode to run in', choices=['snp', 'ins', 'del', 'indel'], required=True)
@@ -222,7 +223,10 @@ def main():
     args = parser.parse_args()
 
     # variables
-    vcf_file = pysam.VariantFile(args.vcf)
+    if args.vcf != 'stdin':
+        vcf_file = pysam.VariantFile(args.vcf)
+    else:
+        vcf_file = pysam.VariantFile('-')
     chromo = args.chr
     regions = args.region
     fold = args.folded
@@ -243,10 +247,12 @@ def main():
         sys.exit('-mute_type can only be run with -mode snp')
 
     # loop through vcf
-    if chromo == 'ALL':
+    if chromo == 'ALL' and args.vcf != 'stdin':
         vcf = vcf_file.fetch()
-    else:
+    elif args.vcf != 'stdin':
         vcf = vcf_file.fetch(chromo)
+    else:
+        vcf = vcf_file
 
     number_samples = len(vcf_file.header.samples)
 
