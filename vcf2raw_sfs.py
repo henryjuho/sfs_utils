@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import argparse
 import pysam
 import sys
@@ -220,6 +221,9 @@ def main():
                         default=False, action='store_true')
     parser.add_argument('-multi_allelic', help='If specified will not restrict output to biallelic sites',
                         default=False, action='store_true')
+    parser.add_argument('-bed', help='If specified will output allele frequncies in bed format,'
+                                     'each row specifying chromosome\tstart\tend\tallele_frequency',
+                        default=False, action='store_true')
     args = parser.parse_args()
 
     # variables
@@ -282,7 +286,10 @@ def main():
 
         # outputs if all criteria ok
         if falls_in_regions is True and degen_ok is True and mutetype_ok is True and alleles_ok is True:
-            print frequency
+            if args.bed:
+                print(variant.chrom, variant.pos - 1, variant.pos, frequency, sep='\t')
+            else:
+                print(frequency)
 
 
 if __name__ == '__main__':
