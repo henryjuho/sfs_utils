@@ -56,6 +56,7 @@ def get_minor_freq(vcf_line, run_mode, no_samples):
     """
     takes a pysam variant and returns the minor allele frequency
     :param vcf_line: pysam variant
+    :param run_mode: string
     :param no_samples: int
     :return: float
     """
@@ -79,7 +80,7 @@ def is_indel(variant):
 
     """
     takes a pysam variant and return whether or not it is an indel
-    :param variant:
+    :param variant: pysam variant
     :return: bool
     """
 
