@@ -35,6 +35,10 @@ optional arguments:
   -folded               If specified will output minor allele spectrum
   -multi_allelic        If specified will not restrict output to biallelic
                         sites
+  -bed                  If specified will output allele frequncies in bed
+				        format,each row specifying chromosome start end
+				        allele_frequency
+
 ```
 
 #### Options
@@ -47,6 +51,8 @@ optional arguments:
  * ```-mute_type``` used to specify what mutation type is desired S<->S = SS, W<->W = WW, W->S = WS and S->W = SW. Can only be used with ```-mode snp``` and SW and WS will only output if ```-folded``` is not specified 
  * ```-folded``` if present will output the folded (minor allele) site frequencies (cannot be used in conjunction with -mode del or mode ins)
  * ```-multi_allelic``` if specified then will not restrict sites to biallelic (default)
+ * ```-bed``` if specified will output allele frequncies in bed format, each row from left to right specifies the chromosome start end allele_frequency
+
 
 ### Examples - commandline
 
@@ -126,6 +132,27 @@ Output:
 ```
 0.1
 0.1
+```
+
+#### Unfolded SFS for indels output to bed format
+
+```
+./vcf2raw_sfs.py -vcf data/test_data_sfs.vcf.gz -mode indel -folded -bed
+```
+
+Output:
+
+```
+chr10   3638302 3638304 0.05
+chr10   3638545 3638546 0.35
+chr10   3639132 3639135 0.3
+chr10   3641277 3641280 0.05
+chr10   3641557 3641558 0.1
+chr10   3641563 3641565 0.1
+chr10   3641928 3641930 0.25
+chr10   3642608 3642609 0.25
+chr10   3642947 3642951 0.2
+chr10   3643568 3643569 0.45
 ```
 
 ### Examples - calling within python
