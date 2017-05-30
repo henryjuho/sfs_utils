@@ -51,7 +51,7 @@ def get_derived_freq(vcf_line, run_mode, no_samples):
         return derv_freq
 
 
-def get_minor_freq(vcf_line, no_samples):
+def get_minor_freq(vcf_line, run_mode, no_samples):
 
     """
     takes a pysam variant and returns the minor allele frequency
@@ -60,11 +60,41 @@ def get_minor_freq(vcf_line, no_samples):
     :return: float
     """
 
+    if _is_indel(vcf_line):
+        variant_type = 'indel'
+    else:
+        variant_type = 'snp'
+
+    if run_mode != variant_type:
+        return None
+
     alt_allele_freq = round(vcf_line.info['AC'][0]/float(no_samples*2), 3)
     if alt_allele_freq <= 0.5:
         return alt_allele_freq
     else:
         return 1 - alt_allele_freq
+
+
+def _is_indel(variant):
+
+    """
+    takes a pysam variant and return whether or not it is an indel
+    :param variant:
+    :return: bool
+    """
+
+    if variant.rlen > 1:
+        return True
+
+    allele_lengths = [len(allele) for allele in variant.alts]
+
+    if len(set(allele_lengths)) > 1:
+        return True
+
+    if allele_lengths[0] > 1:
+        return True
+    else:
+        return False
 
 
 def get_out_freq(vcf_line, pol, run_mode, no_samples):
@@ -81,7 +111,7 @@ def get_out_freq(vcf_line, pol, run_mode, no_samples):
     if pol is True:
         return get_derived_freq(vcf_line, run_mode, no_samples)
     else:
-        return get_minor_freq(vcf_line, no_samples)
+        return get_minor_freq(vcf_line, run_mode, no_samples)
 
 
 def in_regions(vcf_line, target_regions):
@@ -287,7 +317,7 @@ def main():
         # outputs if all criteria ok
         if falls_in_regions is True and degen_ok is True and mutetype_ok is True and alleles_ok is True:
             if args.bed:
-                print(variant.chrom, variant.pos - 1, variant.pos, frequency, sep='\t')
+                print(variant.contig, variant.start, variant.stop, frequency, sep='\t')
             else:
                 print(frequency)
 
