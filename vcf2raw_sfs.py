@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import argparse
 import pysam
 import sys
@@ -50,20 +51,51 @@ def get_derived_freq(vcf_line, run_mode, no_samples):
         return derv_freq
 
 
-def get_minor_freq(vcf_line, no_samples):
+def get_minor_freq(vcf_line, run_mode, no_samples):
 
     """
     takes a pysam variant and returns the minor allele frequency
     :param vcf_line: pysam variant
+    :param run_mode: string
     :param no_samples: int
     :return: float
     """
+
+    if is_indel(vcf_line):
+        variant_type = 'indel'
+    else:
+        variant_type = 'snp'
+
+    if run_mode != variant_type:
+        return None
 
     alt_allele_freq = round(vcf_line.info['AC'][0]/float(no_samples*2), 3)
     if alt_allele_freq <= 0.5:
         return alt_allele_freq
     else:
         return 1 - alt_allele_freq
+
+
+def is_indel(variant):
+
+    """
+    takes a pysam variant and return whether or not it is an indel
+    :param variant: pysam variant
+    :return: bool
+    """
+
+    if variant.rlen > 1:
+        return True
+
+    allele_lengths = [len(allele) for allele in variant.alts]
+
+    if len(set(allele_lengths)) > 1:
+        return True
+
+    if allele_lengths[0] > 1:
+        return True
+    else:
+        return False
 
 
 def get_out_freq(vcf_line, pol, run_mode, no_samples):
@@ -80,7 +112,7 @@ def get_out_freq(vcf_line, pol, run_mode, no_samples):
     if pol is True:
         return get_derived_freq(vcf_line, run_mode, no_samples)
     else:
-        return get_minor_freq(vcf_line, no_samples)
+        return get_minor_freq(vcf_line, run_mode, no_samples)
 
 
 def in_regions(vcf_line, target_regions):
@@ -220,6 +252,9 @@ def main():
                         default=False, action='store_true')
     parser.add_argument('-multi_allelic', help='If specified will not restrict output to biallelic sites',
                         default=False, action='store_true')
+    parser.add_argument('-bed', help='If specified will output allele frequncies in bed format,'
+                                     'each row specifying chromosome\tstart\tend\tallele_frequency',
+                        default=False, action='store_true')
     args = parser.parse_args()
 
     # variables
@@ -282,7 +317,10 @@ def main():
 
         # outputs if all criteria ok
         if falls_in_regions is True and degen_ok is True and mutetype_ok is True and alleles_ok is True:
-            print frequency
+            if args.bed:
+                print(variant.contig, variant.start, variant.stop, frequency, sep='\t')
+            else:
+                print(frequency)
 
 
 if __name__ == '__main__':
