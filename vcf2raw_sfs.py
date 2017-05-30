@@ -60,7 +60,7 @@ def get_minor_freq(vcf_line, run_mode, no_samples):
     :return: float
     """
 
-    if _is_indel(vcf_line):
+    if is_indel(vcf_line):
         variant_type = 'indel'
     else:
         variant_type = 'snp'
@@ -75,7 +75,7 @@ def get_minor_freq(vcf_line, run_mode, no_samples):
         return 1 - alt_allele_freq
 
 
-def _is_indel(variant):
+def is_indel(variant):
 
     """
     takes a pysam variant and return whether or not it is an indel
