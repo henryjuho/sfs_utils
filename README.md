@@ -111,7 +111,7 @@ Which yields:
 #### folded SFS for zerofold SNPs
 
 ```
-/vcf2raw_sfs.py -vcf data/test_data_sfs_snp.vcf.gz -mode snp -degen 0 -folded
+./vcf2raw_sfs.py -vcf data/test_data_sfs_snp.vcf.gz -mode snp -degen 0 -folded
 ```
 
 Which returns:
