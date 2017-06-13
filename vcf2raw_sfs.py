@@ -225,7 +225,7 @@ def is_auto(variant_line):
     :param variant_line: pysam variant
     :return: bool
     """
-    sex_chromos = {'chrZ', 'Z', 'chrW', 'W', 'X', 'XHet', 'Y'}
+    sex_chromos = {'chrZ', 'Z', 'chrW', 'W', 'X', 'XHet', 'Y', 'YHet'}
     if variant_line.contig not in sex_chromos:
         return True
     else:
@@ -252,7 +252,7 @@ def main():
                         default=False, action='store_true')
     parser.add_argument('-multi_allelic', help='If specified will not restrict output to biallelic sites',
                         default=False, action='store_true')
-    parser.add_argument('-bed', help='If specified will output allele frequncies in bed format,'
+    parser.add_argument('-bed', help='If specified will output allele frequencies in bed format,'
                                      'each row specifying chromosome\tstart\tend\tallele_frequency',
                         default=False, action='store_true')
     args = parser.parse_args()
