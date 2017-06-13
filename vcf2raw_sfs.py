@@ -209,7 +209,7 @@ def allele_num_ok(vcf_line, no_samples, multi):
 
     if multi is False:
         pos_biallelic_freqs = [round(i/float(2*no_samples), 3) for i in range(1, 2*no_samples)]
-        alt_allele_freq = round(vcf_line.info['AF'][0], 3)
+        alt_allele_freq = round(vcf_line.info['AC'][0] / float(no_samples * 2), 3)
         if alt_allele_freq in pos_biallelic_freqs:
             return True
         else:
