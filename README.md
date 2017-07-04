@@ -18,12 +18,15 @@ Usage information can be viewed as follows:
 ```
 ./vcf2raw_sfs.py -h
 
-usage: vcf2raw_sfs.py [-h] -vcf VCF [-chr CHR] [-region REGION] -mode
-                      {snp,ins,del,indel} [-folded]
+usage: vcf2raw_sfs.py [-h] [-vcf VCF] [-chr CHR] [-region REGION] -mode
+                      {snp,ins,del,indel} [-degen {0,2,3,4}]
+                      [-mute_type {WW,SS,SW,WS}] [-folded] [-auto_only]
+                      [-multi_allelic] [-skip_hetero] [-bed]
 
 optional arguments:
   -h, --help            show this help message and exit
-  -vcf VCF              VCF file to extract sfs from
+  -vcf VCF              VCF file to extract sfs from, if not specified will
+                        read from standard in,but must contain the header
   -chr CHR              Chromosome to extract
   -region REGION        Genomic regions to extract, default = ALL
   -mode {snp,ins,del,indel}
@@ -33,12 +36,14 @@ optional arguments:
   -mute_type {WW,SS,SW,WS}
                         Mutation type, use only with mode -snp
   -folded               If specified will output minor allele spectrum
+  -auto_only            If specified will exclude sex chromosomes
   -multi_allelic        If specified will not restrict output to biallelic
                         sites
-  -bed                  If specified will output allele frequncies in bed
-				        format,each row specifying chromosome start end
-				        allele_frequency
-
+  -skip_hetero          If specified will skip sites with heterozygous
+                        individuals
+  -bed                  If specified will output allele frequencies in bed
+                        format,each row specifying chromosome start end
+                        allele_frequency
 ```
 
 #### Options
@@ -51,6 +56,7 @@ optional arguments:
  * ```-mute_type``` used to specify what mutation type is desired S<->S = SS, W<->W = WW, W->S = WS and S->W = SW. Can only be used with ```-mode snp``` and SW and WS will only output if ```-folded``` is not specified 
  * ```-folded``` if present will output the folded (minor allele) site frequencies (cannot be used in conjunction with -mode del or mode ins)
  * ```-multi_allelic``` if specified then will not restrict sites to biallelic (default)
+ * ```-skip_hetero``` if specified will skip sites with heterozygous individuals
  * ```-bed``` if specified will output allele frequncies in bed format, each row from left to right specifies the chromosome start end allele_frequency
 
 
@@ -134,7 +140,7 @@ Output:
 0.1
 ```
 
-#### Unfolded SFS for indels output to bed format
+#### Folded SFS for indels output to bed format
 
 ```
 ./vcf2raw_sfs.py -vcf data/test_data_sfs.vcf.gz -mode indel -folded -bed
