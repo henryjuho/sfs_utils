@@ -232,6 +232,24 @@ def is_auto(variant_line):
         return False
 
 
+def is_heterozygous(variant_line):
+
+    """
+    returns False if all individuals at site are homozygous
+    :param variant_line: pysam variant
+    :return: bool
+    """
+
+    # makes a list of lengths of sets of each genotype and then makes that list of lengths a set and gets the length
+    # ie if all individuals are homozygous it will return 1
+    homozygous_value = len(set([len(set(x['GT'])) for x in variant_line.samples.values()]))
+
+    if homozygous_value == 1:
+        return False
+    else:
+        return True
+
+
 # main call
 def main():
 
@@ -252,6 +270,8 @@ def main():
                         default=False, action='store_true')
     parser.add_argument('-multi_allelic', help='If specified will not restrict output to biallelic sites',
                         default=False, action='store_true')
+    parser.add_argument('-skip_hetero', help='If specified will skip sites with heterozygous individuals',
+                        default=False, action='store_true')
     parser.add_argument('-bed', help='If specified will output allele frequencies in bed format,'
                                      'each row specifying chromosome\tstart\tend\tallele_frequency',
                         default=False, action='store_true')
@@ -270,6 +290,7 @@ def main():
     mute_type = args.mute_type
     multi_allelic = args.multi_allelic
     auto_only = args.auto_only
+    skip_hetero = args.skip_hetero
 
     # check commandline options
     if mode == 'indel' and fold is False:
@@ -313,6 +334,10 @@ def main():
         # checks if auto
         auto = is_auto(variant)
         if auto_only is True and auto is False:
+            continue
+
+        # checks if an individuals are heterozygous
+        if skip_hetero and is_heterozygous(variant):
             continue
 
         # outputs if all criteria ok
