@@ -161,14 +161,29 @@ chr10   3642947 3642951 0.2
 chr10   3643568 3643569 0.45
 ```
 
-### Examples - calling within python
+### Examples - Importing as a python module
 
-An example of calling the script within python making use of the subproccess module, allowing the SFS to be read in and stored in a list.
+An example of calling the function in python.
 
 ```python
->>> import subprocess
->>> del_sfs_cmd = './vcf2raw_sfs.py -vcf data/test_data_sfs.vcf.gz -region intergenic -mode del' 
->>> del_sfs = subprocess.Popen(del_sfs_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].split('\n')[:-1]
->>> del_sfs
-['0.3', '0.05', '0.1', '0.75', '0.2']
+>>> from vcf2raw_sfs import vcf2sfs
+>>> sfs_bed_format = vcf2sfs('data/test_data_sfs.vcf.gz', mode='indel', fold=True, bed=True)
+>>> for x in sfs_bed_format:
+        print(x)
+    
+('chr10', 3638302, 3638304, 0.05)
+('chr10', 3638545, 3638546, 0.35)
+('chr10', 3639132, 3639135, 0.3)
+('chr10', 3641277, 3641280, 0.05)
+('chr10', 3641557, 3641558, 0.1)
+('chr10', 3641563, 3641565, 0.1)
+('chr10', 3641928, 3641930, 0.25)
+('chr10', 3642608, 3642609, 0.25)
+('chr10', 3642947, 3642951, 0.2)
+('chr10', 3643568, 3643569, 0.45)
+
+>>> sfs_list_format = vcf2sfs('data/test_data_sfs.vcf.gz', mode='indel', fold=True)
+>>> print(list(sfs_list_format))
+
+[0.05, 0.35, 0.3, 0.05, 0.1, 0.1, 0.25, 0.25, 0.2, 0.45]
 ```
