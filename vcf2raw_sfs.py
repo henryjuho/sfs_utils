@@ -274,13 +274,13 @@ def vcf2sfs(vcf_name, mode, chromo='ALL',
 
     # check commandline options
     if mode == 'indel' and fold is False:
-        sys.exit('-mode indel must be run in conjunction with -folded')
+        sys.exit('mode indel must be in conjunction with fold True')
     if mode == 'ins' and fold is True or mode == 'del' and fold is True:
-        sys.exit('-mode ins and -mode del cannot be run in conjunction with -folded')
+        sys.exit('mode ins and mode del cannot be run in conjunction with fold True')
     if degen is not None and mode != 'snp':
-        sys.exit('-degen can only be specified in conjunction with -mode snp')
+        sys.exit('degen can only be specified in conjunction with mode snp')
     if mute_type is not None and mode != 'snp':
-        sys.exit('-mute_type can only be run with -mode snp')
+        sys.exit('mute_type can only be used with mode snp')
 
     # initiate pysam vcf
     if vcf_name != 'stdin':
@@ -292,13 +292,20 @@ def vcf2sfs(vcf_name, mode, chromo='ALL',
     if chromo == 'ALL' and vcf_name != 'stdin':
         vcf = vcf_file.fetch()
     elif vcf_name != 'stdin':
-        vcf = vcf_file.fetch(chromo)
+        if start is None and stop is None:
+            vcf = vcf_file.fetch(chromo)
+        else:
+            vcf = vcf_file.fetch(chromo, start, stop)
     else:
         vcf = vcf_file
 
     number_samples = len(vcf_file.header.samples)
 
     for variant in vcf:
+        # catch indels starting before first coord
+        if start is not None and stop is not None:
+            if variant.pos < start + 1:
+                continue
 
         # gets relevant freq, minor or derived, see functions
         frequency = get_out_freq(variant, not fold, mode, number_samples)
@@ -342,6 +349,8 @@ def main():
     parser.add_argument('-vcf', help='VCF file to extract sfs from, if not specified will read from standard in,'
                                      'but must contain the header', default='stdin')
     parser.add_argument('-chr', help='Chromosome to extract', default='ALL')
+    parser.add_argument('-start', help='Start coord 0 based', type=int)
+    parser.add_argument('-stop', help='End coord, 0 based', type=int)
     parser.add_argument('-region', help='Genomic regions to extract, default = ALL', action='append')
     parser.add_argument('-mode', help='Variant mode to run in', choices=['snp', 'ins', 'del', 'indel'], required=True)
     parser.add_argument('-degen', help='Degeneracy of coding SNPs to extract (must run with -mode snp',
@@ -362,7 +371,7 @@ def main():
     args = parser.parse_args()
 
     # call to sfs function
-    sfs = vcf2sfs(args.vcf, args.mode, chromo=args.chr, start=None, stop=None, degen=args.degen,
+    sfs = vcf2sfs(args.vcf, args.mode, chromo=args.chr, start=args.start, stop=args.stop, degen=args.degen,
                   mute_type=args.mute_type, regions=args.region, fold=args.folded, auto_only=args.auto_only,
                   multi_allelic=args.multi_allelic, skip_hetero=args.skip_hetero, bed=args.bed)
 
