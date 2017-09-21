@@ -250,47 +250,27 @@ def is_heterozygous(variant_line):
         return True
 
 
-# main call
-def main():
+def vcf2sfs(vcf_name, mode, chromo='ALL',
+            start=None, stop=None, degen=None, mute_type=None, regions=None,
+            fold=False, auto_only=False, multi_allelic=False, skip_hetero=False, bed=False):
 
-    # arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-vcf', help='VCF file to extract sfs from, if not specified will read from standard in,'
-                                     'but must contain the header', default='stdin')
-    parser.add_argument('-chr', help='Chromosome to extract', default='ALL')
-    parser.add_argument('-region', help='Genomic regions to extract, default = ALL', action='append')
-    parser.add_argument('-mode', help='Variant mode to run in', choices=['snp', 'ins', 'del', 'indel'], required=True)
-    parser.add_argument('-degen', help='Degeneracy of coding SNPs to extract (must run with -mode snp',
-                        choices=[0, 2, 3, 4], type=int)
-    parser.add_argument('-mute_type', help='Mutation type, use only with mode -snp',
-                        choices=['WW', 'SS', 'SW', 'WS'], action='append')
-    parser.add_argument('-folded', help='If specified will output minor allele spectrum',
-                        default=False, action='store_true')
-    parser.add_argument('-auto_only', help='If specified will exclude sex chromosomes',
-                        default=False, action='store_true')
-    parser.add_argument('-multi_allelic', help='If specified will not restrict output to biallelic sites',
-                        default=False, action='store_true')
-    parser.add_argument('-skip_hetero', help='If specified will skip sites with heterozygous individuals',
-                        default=False, action='store_true')
-    parser.add_argument('-bed', help='If specified will output allele frequencies in bed format,'
-                                     'each row specifying chromosome\tstart\tend\tallele_frequency',
-                        default=False, action='store_true')
-    args = parser.parse_args()
-
-    # variables
-    if args.vcf != 'stdin':
-        vcf_file = pysam.VariantFile(args.vcf)
-    else:
-        vcf_file = pysam.VariantFile('-')
-    chromo = args.chr
-    regions = args.region
-    fold = args.folded
-    mode = args.mode
-    degen = args.degen
-    mute_type = args.mute_type
-    multi_allelic = args.multi_allelic
-    auto_only = args.auto_only
-    skip_hetero = args.skip_hetero
+    """
+    function that outputs site frequencies from vcf and is called in main()
+    :param vcf_name: str
+    :param mode: str
+    :param chromo: str
+    :param start: int
+    :param stop: int
+    :param degen: int
+    :param mute_type: str
+    :param regions: list
+    :param fold: bool
+    :param auto_only: bool
+    :param multi_allelic: bool
+    :param skip_hetero: bool
+    :param bed: bool
+    :return: yields tuples or floats
+    """
 
     # check commandline options
     if mode == 'indel' and fold is False:
@@ -302,10 +282,16 @@ def main():
     if mute_type is not None and mode != 'snp':
         sys.exit('-mute_type can only be run with -mode snp')
 
+    # initiate pysam vcf
+    if vcf_name != 'stdin':
+        vcf_file = pysam.VariantFile(vcf_name)
+    else:
+        vcf_file = pysam.VariantFile('-')
+
     # loop through vcf
-    if chromo == 'ALL' and args.vcf != 'stdin':
+    if chromo == 'ALL' and vcf_name != 'stdin':
         vcf = vcf_file.fetch()
-    elif args.vcf != 'stdin':
+    elif vcf_name != 'stdin':
         vcf = vcf_file.fetch(chromo)
     else:
         vcf = vcf_file
@@ -342,11 +328,49 @@ def main():
 
         # outputs if all criteria ok
         if falls_in_regions is True and degen_ok is True and mutetype_ok is True and alleles_ok is True:
-            if args.bed:
-                print(variant.contig, variant.start, variant.stop, frequency, sep='\t')
+            if bed:
+                yield variant.contig, variant.start, variant.stop, frequency
             else:
-                print(frequency)
+                yield frequency
 
+
+# main call
+def main():
+
+    # arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-vcf', help='VCF file to extract sfs from, if not specified will read from standard in,'
+                                     'but must contain the header', default='stdin')
+    parser.add_argument('-chr', help='Chromosome to extract', default='ALL')
+    parser.add_argument('-region', help='Genomic regions to extract, default = ALL', action='append')
+    parser.add_argument('-mode', help='Variant mode to run in', choices=['snp', 'ins', 'del', 'indel'], required=True)
+    parser.add_argument('-degen', help='Degeneracy of coding SNPs to extract (must run with -mode snp',
+                        choices=[0, 2, 3, 4], type=int)
+    parser.add_argument('-mute_type', help='Mutation type, use only with mode -snp',
+                        choices=['WW', 'SS', 'SW', 'WS'], action='append')
+    parser.add_argument('-folded', help='If specified will output minor allele spectrum',
+                        default=False, action='store_true')
+    parser.add_argument('-auto_only', help='If specified will exclude sex chromosomes',
+                        default=False, action='store_true')
+    parser.add_argument('-multi_allelic', help='If specified will not restrict output to biallelic sites',
+                        default=False, action='store_true')
+    parser.add_argument('-skip_hetero', help='If specified will skip sites with heterozygous individuals',
+                        default=False, action='store_true')
+    parser.add_argument('-bed', help='If specified will output allele frequencies in bed format,'
+                                     'each row specifying chromosome\tstart\tend\tallele_frequency',
+                        default=False, action='store_true')
+    args = parser.parse_args()
+
+    # call to sfs function
+    sfs = vcf2sfs(args.vcf, args.mode, chromo=args.chr, start=None, stop=None, degen=args.degen,
+                  mute_type=args.mute_type, regions=args.region, fold=args.folded, auto_only=args.auto_only,
+                  multi_allelic=args.multi_allelic, skip_hetero=args.skip_hetero, bed=args.bed)
+
+    for site in sfs:
+        if args.bed:
+            print(*list(site), sep='\t')
+        else:
+            print(site)
 
 if __name__ == '__main__':
     main()
