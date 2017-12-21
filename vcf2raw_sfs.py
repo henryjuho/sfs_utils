@@ -250,9 +250,23 @@ def is_heterozygous(variant_line):
         return True
 
 
+def get_homozygosity(variant_line):
+
+    """
+    returns number of homozygous individuals
+    :param variant_line: pysam variant
+    :return: int
+    """
+
+    # makes a list of lengths of sets of each genotype ie: [1, 2, 1, 2] == [homo, hetero, homo, hetero]
+    homozygous = [len(set(x['GT'])) for x in variant_line.samples.values()].count(1)
+
+    return homozygous
+
+
 def vcf2sfs(vcf_name, mode, chromo='ALL',
             start=None, stop=None, degen=None, mute_type=None, regions=None,
-            fold=False, auto_only=False, multi_allelic=False, skip_hetero=False, bed=False):
+            fold=False, auto_only=False, multi_allelic=False, skip_hetero=False, bed=False, homozygosity=False):
 
     """
     function that outputs site frequencies from vcf and is called in main()
@@ -269,6 +283,7 @@ def vcf2sfs(vcf_name, mode, chromo='ALL',
     :param multi_allelic: bool
     :param skip_hetero: bool
     :param bed: bool
+    :param homozygosity: bool
     :return: yields tuples or floats
     """
 
@@ -281,6 +296,8 @@ def vcf2sfs(vcf_name, mode, chromo='ALL',
         sys.exit('degen can only be specified in conjunction with mode snp')
     if mute_type is not None and mode != 'snp':
         sys.exit('mute_type can only be used with mode snp')
+    if homozygosity and not bed:
+        sys.exit('homozygosity can only be output in bed mode')
 
     # initiate pysam vcf
     if vcf_name != 'stdin':
@@ -329,14 +346,17 @@ def vcf2sfs(vcf_name, mode, chromo='ALL',
         if auto_only is True and auto is False:
             continue
 
-        # checks if an individuals are heterozygous
+        # checks if any individuals are heterozygous
         if skip_hetero and is_heterozygous(variant):
             continue
 
         # outputs if all criteria ok
         if falls_in_regions is True and degen_ok is True and mutetype_ok is True and alleles_ok is True:
             if bed:
-                yield variant.contig, variant.start, variant.stop, frequency
+                if homozygosity:
+                    yield variant.contig, variant.start, variant.stop, frequency, get_homozygosity(variant)
+                else:
+                    yield variant.contig, variant.start, variant.stop, frequency
             else:
                 yield frequency
 
@@ -368,12 +388,16 @@ def main():
     parser.add_argument('-bed', help='If specified will output allele frequencies in bed format,'
                                      'each row specifying chromosome\tstart\tend\tallele_frequency',
                         default=False, action='store_true')
+    parser.add_argument('-homozygosity', help='If specified will output homozygosity in bed format, each row specifying'
+                                              ' chromosome\tstart\tend\tallele_frequency\thomozygosity',
+                        default=False, action='store_true')
     args = parser.parse_args()
 
     # call to sfs function
     sfs = vcf2sfs(args.vcf, args.mode, chromo=args.chr, start=args.start, stop=args.stop, degen=args.degen,
                   mute_type=args.mute_type, regions=args.region, fold=args.folded, auto_only=args.auto_only,
-                  multi_allelic=args.multi_allelic, skip_hetero=args.skip_hetero, bed=args.bed)
+                  multi_allelic=args.multi_allelic, skip_hetero=args.skip_hetero, bed=args.bed,
+                  homozygosity=args.homozygosity)
 
     for site in sfs:
         if args.bed:
