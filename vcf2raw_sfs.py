@@ -7,6 +7,22 @@ import sys
 
 
 # functions
+def indel_length(vcf_line):
+
+    """
+    calculates INDEL length
+    :param vcf_line: pysam variant
+    :return: int
+    """
+
+    ref_seq = vcf_line.ref
+    alt_seq = vcf_line.alts[0]
+
+    length = abs(len(ref_seq) - len(alt_seq))
+
+    return length
+
+
 def get_derived_freq(vcf_line, run_mode, no_samples):
 
     """
@@ -266,7 +282,8 @@ def get_homozygosity(variant_line):
 
 def vcf2sfs(vcf_name, mode, chromo='ALL',
             start=None, stop=None, degen=None, mute_type=None, regions=None,
-            fold=False, auto_only=False, multi_allelic=False, skip_hetero=False, bed=False, homozygosity=False):
+            fold=False, auto_only=False, multi_allelic=False, skip_hetero=False, bed=False, homozygosity=False,
+            lengths=(0,)):
 
     """
     function that outputs site frequencies from vcf and is called in main()
@@ -298,6 +315,8 @@ def vcf2sfs(vcf_name, mode, chromo='ALL',
         sys.exit('mute_type can only be used with mode snp')
     if homozygosity and not bed:
         sys.exit('homozygosity can only be output in bed mode')
+    if len(lengths) > 0 and mode == 'snp':
+        sys.exit('len can only be specified with indel ins or del mode')
 
     # initiate pysam vcf
     if vcf_name != 'stdin':
@@ -350,6 +369,12 @@ def vcf2sfs(vcf_name, mode, chromo='ALL',
         if skip_hetero and is_heterozygous(variant):
             continue
 
+        # checks length specification is met
+        if len(lengths) > 0:
+            if indel_length(variant) not in lengths:
+                print(indel_length(variant))
+                continue
+
         # outputs if all criteria ok
         if falls_in_regions is True and degen_ok is True and mutetype_ok is True and alleles_ok is True:
             if bed:
@@ -391,13 +416,15 @@ def main():
     parser.add_argument('-homozygosity', help='If specified will output homozygosity in bed format, each row specifying'
                                               ' chromosome\tstart\tend\tallele_frequency\thomozygosity',
                         default=False, action='store_true')
+    parser.add_argument('-len', help='If specified then outputs INDELs of specified length', action='append',
+                        default=[], type=int)
     args = parser.parse_args()
 
     # call to sfs function
     sfs = vcf2sfs(args.vcf, args.mode, chromo=args.chr, start=args.start, stop=args.stop, degen=args.degen,
                   mute_type=args.mute_type, regions=args.region, fold=args.folded, auto_only=args.auto_only,
                   multi_allelic=args.multi_allelic, skip_hetero=args.skip_hetero, bed=args.bed,
-                  homozygosity=args.homozygosity)
+                  homozygosity=args.homozygosity, lengths=set(args.len))
 
     for site in sfs:
         if args.bed:
