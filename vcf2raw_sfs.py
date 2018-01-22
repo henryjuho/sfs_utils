@@ -301,6 +301,7 @@ def vcf2sfs(vcf_name, mode, chromo='ALL',
     :param skip_hetero: bool
     :param bed: bool
     :param homozygosity: bool
+    :param lengths: set
     :return: yields tuples or floats
     """
 
@@ -372,7 +373,6 @@ def vcf2sfs(vcf_name, mode, chromo='ALL',
         # checks length specification is met
         if len(lengths) > 0:
             if indel_length(variant) not in lengths:
-                print(indel_length(variant))
                 continue
 
         # outputs if all criteria ok
