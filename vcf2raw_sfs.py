@@ -316,7 +316,7 @@ def vcf2sfs(vcf_name, mode, chromo='ALL',
         sys.exit('mute_type can only be used with mode snp')
     if homozygosity and not bed:
         sys.exit('homozygosity can only be output in bed mode')
-    if len(lengths) > 0 and mode == 'snp':
+    if len(lengths) > 1 and mode == 'snp':
         sys.exit('len can only be specified with indel ins or del mode')
 
     # initiate pysam vcf
