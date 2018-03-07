@@ -283,7 +283,7 @@ def get_homozygosity(variant_line):
 def vcf2sfs(vcf_name, mode, chromo='ALL',
             start=None, stop=None, degen=None, mute_type=None, regions=None,
             fold=False, auto_only=False, multi_allelic=False, skip_hetero=False, bed=False, homozygosity=False,
-            lengths=(0,)):
+            lengths=set([])):
 
     """
     function that outputs site frequencies from vcf and is called in main()
