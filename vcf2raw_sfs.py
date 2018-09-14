@@ -7,6 +7,43 @@ import sys
 
 
 # functions
+def custom_info_expression(expression, vcf_line):
+
+    """
+    looks at at custom info fields and if they meet criteria
+    :param expression: str
+    :param vcf_line: pysam variant
+    :return: bool
+    """
+
+    if '=' in expression:
+
+        field, filter_val = expression.split('=')
+        anno_val = int(vcf_line.info[field])
+        if anno_val == int(filter_val):
+            return True
+        else:
+            return False
+
+    elif '>' in expression:
+
+        field, filter_val = expression.split('>')
+        anno_val = int(vcf_line.info[field])
+        if anno_val > int(filter_val):
+            return True
+        else:
+            return False
+
+    else:
+
+        field, filter_val = expression.split('<')
+        anno_val = int(vcf_line.info[field])
+        if anno_val < int(filter_val):
+            return True
+        else:
+            return False
+
+
 def indel_length(vcf_line):
 
     """
@@ -283,7 +320,7 @@ def get_homozygosity(variant_line):
 def vcf2sfs(vcf_name, mode, chromo='ALL',
             start=None, stop=None, degen=None, mute_type=None, regions=None,
             fold=False, auto_only=False, multi_allelic=False, skip_hetero=False, bed=False, homozygosity=False,
-            lengths=set([])):
+            lengths=set([]), custom_info=None):
 
     """
     function that outputs site frequencies from vcf and is called in main()
@@ -302,6 +339,7 @@ def vcf2sfs(vcf_name, mode, chromo='ALL',
     :param bed: bool
     :param homozygosity: bool
     :param lengths: set
+    :param custom_info: str
     :return: yields tuples or floats
     """
 
@@ -348,6 +386,11 @@ def vcf2sfs(vcf_name, mode, chromo='ALL',
         frequency = get_out_freq(variant, not fold, mode, number_samples)
         if frequency is None:  # skips when no freq returned, ie unpolarised or wrong var type
             continue
+
+        # if custom info specified check if match
+        if custom_info is not None:
+            if not custom_info_expression(custom_info, variant):
+                continue
 
         # gets variant region if regional sfs required
         falls_in_regions = in_regions(variant, regions)
