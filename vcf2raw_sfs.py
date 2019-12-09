@@ -126,7 +126,7 @@ def get_minor_freq(vcf_line, run_mode, no_samples):
     if alt_allele_freq <= 0.5:
         return alt_allele_freq
     else:
-        return 1 - alt_allele_freq
+        return round(1 - alt_allele_freq, 3)
 
 
 def is_indel(variant):
