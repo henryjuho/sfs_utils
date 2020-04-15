@@ -420,13 +420,14 @@ def vcf2sfs(vcf_name, mode, chromo='ALL',
 
         # outputs if all criteria ok
         if falls_in_regions is True and degen_ok is True and mutetype_ok is True and alleles_ok is True:
+            freq = round(frequency, 3)
             if bed:
                 if homozygosity:
-                    yield variant.contig, variant.start, variant.stop, frequency, get_homozygosity(variant)
+                    yield variant.contig, variant.start, variant.stop, freq, get_homozygosity(variant)
                 else:
-                    yield variant.contig, variant.start, variant.stop, frequency
+                    yield variant.contig, variant.start, variant.stop, freq
             else:
-                yield frequency
+                yield freq
 
 
 # main call
